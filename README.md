@@ -1,73 +1,79 @@
-# Welcome to your Lovable project
+# Skill Swap Marketplace
 
-## Project info
+A modern web application facilitating the exchange of skills between users. Built with a focus on a seamless user experience, robust authentication, and scalable architecture.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Technologies Used
 
-## How can I edit this code?
+### Frontend
 
-There are several ways of editing your application.
+- **React 18**: Core library for building the user interface.
+- **TypeScript**: Statically typed JavaScript for better code quality.
+- **Vite**: Fast build tool and development server.
+- **Tailwind CSS**: Utility-first CSS framework for styling.
+- **shadcn/ui**: Reusable, accessible component library based on Radix UI.
+- **Sonner**: For elegant toast notifications.
 
-**Use Lovable**
+### Backend & Infrastructure
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- **Firebase**: Handles User Authentication (Google Sign-In, Email/Password).
+- **Supabase (PostgreSQL)**: Primary database for storing user profiles and application data.
+- **Node.js + Express** (Planned): For implementing complex business logic and API endpoints.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📂 Project Structure
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+c:/Projects/Skill-Swap/skill-swap-fsd/
+├── src/
+│   ├── components/     # Reusable UI components (shadcn/ui, layout, etc.)
+│   ├── contexts/       # Global State (AuthContext, ThemeContext)
+│   ├── lib/            # Configuration files (firebase.ts, supabase.ts, utils.ts)
+│   ├── pages/          # Application Routes (Login, Register, Learn, Teach, Profile)
+│   └── hooks/          # Custom React Hooks
+├── public/             # Static assets
+└── server/             # (Planned) Node.js Backend
 ```
 
-**Edit a file directly in GitHub**
+## ✨ Key Features
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **Authentication**: Secure login and registration using Firebase Auth.
+  - **Google Sign-In**: One-click login.
+  - **Email/Password**: Traditional account creation.
+- **Data Synchronization**: Automatically syncs Firebase user identities to a Supabase PostgreSQL `users` table.
+- **Responsive Design**: Mobile-first UI built with Tailwind CSS.
+- **Dark Mode**: Built-in, system-aware theme support.
 
-**Use GitHub Codespaces**
+## 🛠️ Getting Started
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+1.  **Clone the repository**
 
-## What technologies are used for this project?
+    ```bash
+    git clone https://github.com/akshath-31/skill-swap-fsd.git
+    cd skill-swap-fsd
+    ```
 
-This project is built with:
+2.  **Install Dependencies**
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+    ```bash
+    npm install
+    ```
 
-## How can I deploy this project?
+3.  **Run Development Server**
+    ```bash
+    npm run dev
+    ```
+    The application will start at `http://localhost:8080`.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## 🔒 Configuration
 
-## Can I connect a custom domain to my Lovable project?
+The project currently uses direct configuration for Firebase and Supabase in `src/lib/`.
 
-Yes, you can!
+- **Firebase**: configured in `src/lib/firebase.ts`
+- **Supabase**: configured in `src/lib/supabase.ts`
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🤝 Contributing
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
