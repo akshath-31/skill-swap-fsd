@@ -69,10 +69,6 @@ const Register = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
         <div className="relative z-10 flex flex-col justify-end p-12 text-foreground">
-          <h1 className="text-4xl font-bold mb-4">Learn anything.<br />Teach anything.</h1>
-          <p className="text-lg text-muted-foreground max-w-md">
-            Join our community of learners and teachers. Exchange skills, grow together.
-          </p>
         </div>
       </div>
 
