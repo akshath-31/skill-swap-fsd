@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Users, Star, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { ErrorBanner } from "@/components/shared/ErrorBanner";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchSkills, createSkill, deleteSkill } from "@/lib/mongodb-api";
 
 interface TeachSkill {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   category: string;
@@ -19,74 +23,113 @@ interface TeachSkill {
 const categories = ["Design", "Development", "Marketing", "Music", "Language", "Business"];
 
 const Teach = () => {
-  const [skills, setSkills] = useState<TeachSkill[]>([
-    {
-      id: "1",
-      title: "JavaScript Fundamentals",
-      description: "Learn the basics of JavaScript programming including variables, functions, and DOM manipulation.",
-      category: "Development",
-      credits: 25,
-      students: 12,
-      rating: 4.8,
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const { data: skills = [], isLoading: isFetching, error } = useQuery({
+    queryKey: ['skills', { uid: user?.uid }],
+    queryFn: () => {
+      console.log('Fetching skills for UID:', user?.uid);
+      return user ? fetchSkills({ uid: user.uid, type: 'offer' }) : Promise.resolve([]);
     },
-  ]);
+    enabled: !!user,
+  });
+
+  useEffect(() => {
+    console.log('Current Teach list:', skills);
+  }, [skills]);
+
+  const createMutation = useMutation({
+    mutationFn: createSkill,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skills'] });
+      toast({
+        title: "Skill posted!",
+        description: "Your skill is now visible to learners.",
+      });
+      setIsModalOpen(false);
+      setFormData({ title: "", description: "", category: "", credits: "" });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to post skill to MongoDB.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteSkill,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skills'] });
+      toast({
+        title: "Skill removed",
+        description: "Your skill has been deleted from MongoDB.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete skill from MongoDB.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     category: "",
     credits: "",
   });
-  const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!user) return;
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const newSkill: TeachSkill = {
-      id: Date.now().toString(),
+    createMutation.mutate({
+      uid: user.uid,
+      teacherName: user.name,
+      teacherAvatar: user.avatar,
       title: formData.title,
       description: formData.description,
       category: formData.category,
       credits: parseInt(formData.credits),
-      students: 0,
-      rating: 0,
-    };
-
-    setSkills([...skills, newSkill]);
-    setIsModalOpen(false);
-    setFormData({ title: "", description: "", category: "", credits: "" });
-    setIsLoading(false);
-
-    toast({
-      title: "Skill posted!",
-      description: "Your skill is now visible to learners.",
+      type: 'offer',
     });
   };
 
   const handleDelete = (id: string) => {
-    setSkills(skills.filter((s) => s.id !== id));
-    toast({
-      title: "Skill removed",
-      description: "Your skill has been deleted.",
-    });
+    deleteMutation.mutate(id);
   };
 
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Teach</h1>
-          <p className="text-muted-foreground">Share your expertise and earn credits</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">My Skills</h1>
+          <p className="text-muted-foreground">Manage the skills you're offering to the community</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="rounded-xl">
+        <Button onClick={() => setIsModalOpen(true)} className="rounded-xl px-6">
           <Plus className="w-4 h-4 mr-2" />
           Post a Skill
         </Button>
       </div>
+
+      {error && (
+        <div className="mb-6">
+          <ErrorBanner message={error instanceof Error ? error.message : "Failed to load skills"} />
+        </div>
+      )}
+
+      {isFetching && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
 
       {skills.length === 0 ? (
         <EmptyState
@@ -103,7 +146,7 @@ const Teach = () => {
         <div className="space-y-4">
           {skills.map((skill) => (
             <div
-              key={skill.id}
+              key={skill._id}
               className="bg-card border border-border rounded-xl p-5 hover:shadow-soft transition-shadow animate-fade-in"
             >
               <div className="flex items-start justify-between">
@@ -138,7 +181,7 @@ const Teach = () => {
                     <Edit2 className="w-4 h-4 text-muted-foreground" />
                   </button>
                   <button
-                    onClick={() => handleDelete(skill.id)}
+                    onClick={() => handleDelete(skill._id)}
                     className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
@@ -219,8 +262,8 @@ const Teach = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-11 rounded-xl" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" className="w-full h-11 rounded-xl" disabled={createMutation.isPending}>
+                {createMutation.isPending ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   "Post Skill"

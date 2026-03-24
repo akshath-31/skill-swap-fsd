@@ -14,6 +14,7 @@ import { toast } from "sonner";
 interface AuthContextType {
   isAuthenticated: boolean;
   user: {
+    uid: string;
     name: string;
     email: string;
     avatar: string;
@@ -28,46 +29,34 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper to sync user to Supabase
-const syncUserWithSupabase = async (firebaseUser: any) => {
+import { syncUserWithMongoDB, fetchUserFromMongoDB } from "@/lib/mongodb-api";
+
+// Helper to sync user to MongoDB
+const syncUserWithMongoDBHelper = async (firebaseUser: any) => {
   try {
-    // 1. Sync basic info to Supabase
-    const updates = {
-      id: firebaseUser.uid,
+    // 1. Sync info to MongoDB
+    const userData = {
+      uid: firebaseUser.uid,
       email: firebaseUser.email,
-      full_name: firebaseUser.displayName,
-      avatar_url: firebaseUser.photoURL,
-      last_login: new Date().toISOString(),
+      name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+      avatar: firebaseUser.photoURL,
     };
 
-    const { error: upsertError } = await supabase
-      .from("users")
-      .upsert(updates, { onConflict: "id" });
+    await syncUserWithMongoDB(userData);
 
-    if (upsertError) {
-      console.error("Error syncing user to Supabase:", upsertError);
-    }
-
-    // 2. Fetch latest user data (including role/credits)
-    const { data: dbUser, error: fetchError } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", firebaseUser.uid)
-      .single();
-
-    if (fetchError) {
-      console.error("Error fetching user details:", fetchError);
-    }
+    // 2. Fetch latest user data (including credits)
+    const dbUser = await fetchUserFromMongoDB(firebaseUser.uid);
 
     return {
-      name: firebaseUser.displayName || dbUser?.full_name || "",
-      email: firebaseUser.email || dbUser?.email || "",
-      avatar: firebaseUser.photoURL || dbUser?.avatar_url || "",
-      credits: dbUser?.credits || 0,
-      role: dbUser?.role || "user",
+      uid: firebaseUser.uid,
+      name: dbUser.name,
+      email: dbUser.email,
+      avatar: dbUser.avatar,
+      credits: dbUser.credits,
+      role: dbUser.role,
     };
   } catch (err) {
-    console.error("Unexpected error in auth sync:", err);
+    console.error("Unexpected error in MongoDB auth sync:", err);
     return null;
   }
 };
@@ -80,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const syncedUser = await syncUserWithSupabase(firebaseUser);
+        const syncedUser = await syncUserWithMongoDBHelper(firebaseUser);
         if (syncedUser) {
           setUser(syncedUser);
           setIsAuthenticated(true);
@@ -126,9 +115,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         displayName: name,
       });
       
-      // Manually trigger sync to Supabase to capture the new Display Name
+      // Manually trigger sync to MongoDB to capture the new Display Name
       // (because the onAuthStateChanged listener might have fired before updateProfile completed)
-      const syncedUser = await syncUserWithSupabase(userCredential.user);
+      const syncedUser = await syncUserWithMongoDBHelper(userCredential.user);
       if (syncedUser) {
         setUser(syncedUser);
       }

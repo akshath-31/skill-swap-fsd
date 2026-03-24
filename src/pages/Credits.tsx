@@ -5,25 +5,24 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
+import { useQuery } from "@tanstack/react-query";
+import { fetchTransactions } from "@/lib/mongodb-api";
+
 interface Transaction {
-  id: string;
+  _id: string;
   type: "credit" | "debit";
   amount: number;
   description: string;
-  date: string;
+  createdAt: string;
 }
-
-const transactions: Transaction[] = [
-  { id: "1", type: "credit", amount: 100, description: "Welcome bonus", date: "2024-01-15" },
-  { id: "2", type: "debit", amount: 25, description: "Learned UI/UX Design Fundamentals", date: "2024-01-14" },
-  { id: "3", type: "credit", amount: 30, description: "Taught React Development Basics", date: "2024-01-12" },
-  { id: "4", type: "debit", amount: 15, description: "Learned Spanish Conversation", date: "2024-01-10" },
-  { id: "5", type: "credit", amount: 50, description: "Top up", date: "2024-01-08" },
-  { id: "6", type: "credit", amount: 25, description: "Taught JavaScript Fundamentals", date: "2024-01-05" },
-];
 
 const Credits = () => {
   const { user } = useAuth();
+  const { data: transactions = [], isLoading: isFetchingTx } = useQuery({
+    queryKey: ['transactions', user?.uid],
+    queryFn: () => user ? fetchTransactions(user.uid) : Promise.resolve([]),
+    enabled: !!user,
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -86,51 +85,61 @@ const Credits = () => {
       {/* Transaction History */}
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-4">Transaction History</h2>
-        <div className="space-y-0">
-          {transactions.map((transaction, index) => (
-            <div
-              key={transaction.id}
-              className="timeline-item animate-fade-in"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
+        {isFetchingTx ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : transactions.length === 0 ? (
+          <div className="text-center py-12 bg-card border border-dashed rounded-xl">
+            <p className="text-muted-foreground">No transactions yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-0">
+            {transactions.map((transaction, index) => (
               <div
-                className={`timeline-dot ${
-                  transaction.type === "credit" ? "bg-success" : "bg-destructive"
-                }`}
-              />
-              <div className="bg-card border border-border rounded-xl p-4 hover:shadow-soft transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        transaction.type === "credit"
-                          ? "bg-success/10 text-success"
-                          : "bg-destructive/10 text-destructive"
+                key={transaction._id}
+                className="timeline-item animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div
+                  className={`timeline-dot ${
+                    transaction.type === "credit" ? "bg-success" : "bg-destructive"
+                  }`}
+                />
+                <div className="bg-card border border-border rounded-xl p-4 hover:shadow-soft transition-shadow">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          transaction.type === "credit"
+                            ? "bg-success/10 text-success"
+                            : "bg-destructive/10 text-destructive"
+                        }`}
+                      >
+                        {transaction.type === "credit" ? (
+                          <ArrowDownLeft className="w-5 h-5" />
+                        ) : (
+                          <ArrowUpRight className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{transaction.description}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(transaction.createdAt)}</p>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-lg font-semibold ${
+                        transaction.type === "credit" ? "credit-positive" : "credit-negative"
                       }`}
                     >
-                      {transaction.type === "credit" ? (
-                        <ArrowDownLeft className="w-5 h-5" />
-                      ) : (
-                        <ArrowUpRight className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">{transaction.description}</p>
-                      <p className="text-sm text-muted-foreground">{formatDate(transaction.date)}</p>
-                    </div>
+                      {transaction.type === "credit" ? "+" : "-"}{transaction.amount}
+                    </span>
                   </div>
-                  <span
-                    className={`text-lg font-semibold ${
-                      transaction.type === "credit" ? "credit-positive" : "credit-negative"
-                    }`}
-                  >
-                    {transaction.type === "credit" ? "+" : "-"}{transaction.amount}
-                  </span>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Top Up Modal */}

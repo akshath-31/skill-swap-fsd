@@ -1,23 +1,24 @@
-import { User, BookOpen, Users, Star, Mail, Calendar } from "lucide-react";
+import { User, BookOpen, Users, Star, Mail, Calendar, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSkills } from "@/lib/mongodb-api";
 
 interface SkillItem {
-  id: string;
+  _id: string;
   title: string;
-  date: string;
+  createdAt: string;
 }
-
-const skillsLearned: SkillItem[] = [
-  { id: "1", title: "UI/UX Design Fundamentals", date: "2024-01-14" },
-  { id: "2", title: "Spanish Conversation", date: "2024-01-10" },
-];
-
-const skillsTaught: SkillItem[] = [
-  { id: "1", title: "JavaScript Fundamentals", date: "2024-01-05" },
-];
 
 const Profile = () => {
   const { user } = useAuth();
+
+  const { data: skillsTaught = [], isLoading: isLoadingTaught } = useQuery({
+    queryKey: ['skills'],
+    queryFn: fetchSkills,
+  });
+
+  // Mocking skills learned for now as we don't have a matching system yet
+  const skillsLearned: SkillItem[] = [];
 
   const getInitials = (name: string) => {
     return name
@@ -107,13 +108,13 @@ const Profile = () => {
             <div className="space-y-3">
               {skillsLearned.map((skill) => (
                 <div
-                  key={skill.id}
+                  key={skill._id}
                   className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                 >
                   <span className="text-sm font-medium text-foreground">{skill.title}</span>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="w-3 h-3" />
-                    <span>{formatDate(skill.date)}</span>
+                    <span>{formatDate(skill.createdAt)}</span>
                   </div>
                 </div>
               ))}
@@ -127,19 +128,23 @@ const Profile = () => {
             <Users className="w-5 h-5 text-primary" />
             <h3 className="font-semibold text-foreground">Skills Taught</h3>
           </div>
-          {skillsTaught.length === 0 ? (
+          {isLoadingTaught ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : skillsTaught.length === 0 ? (
             <p className="text-sm text-muted-foreground">No skills taught yet</p>
           ) : (
             <div className="space-y-3">
-              {skillsTaught.map((skill) => (
+              {skillsTaught.map((skill: SkillItem) => (
                 <div
-                  key={skill.id}
+                  key={skill._id}
                   className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                 >
                   <span className="text-sm font-medium text-foreground">{skill.title}</span>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="w-3 h-3" />
-                    <span>{formatDate(skill.date)}</span>
+                    <span>{formatDate(skill.createdAt)}</span>
                   </div>
                 </div>
               ))}

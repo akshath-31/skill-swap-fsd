@@ -6,102 +6,35 @@ import { SkillDetailModal } from "@/components/skills/SkillDetailModal";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { ErrorBanner } from "@/components/shared/ErrorBanner";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSkills } from "@/lib/mongodb-api";
 
 const categories = ["All", "Design", "Development", "Marketing", "Music", "Language", "Business"];
-
-const dummySkills: Skill[] = [
-  {
-    id: "1",
-    title: "UI/UX Design Fundamentals",
-    description: "Learn the principles of user interface and user experience design. We'll cover wireframing, prototyping, and design systems.",
-    category: "Design",
-    teacher: { name: "Sarah Chen", avatar: "" },
-    credits: 25,
-    rating: 4.9,
-    reviewCount: 127,
-  },
-  {
-    id: "2",
-    title: "React Development Basics",
-    description: "Master React from scratch. Learn components, hooks, state management, and build real-world applications.",
-    category: "Development",
-    teacher: { name: "Mike Johnson", avatar: "" },
-    credits: 30,
-    rating: 4.8,
-    reviewCount: 89,
-  },
-  {
-    id: "3",
-    title: "Digital Marketing Strategy",
-    description: "Comprehensive guide to digital marketing including SEO, social media, content marketing, and analytics.",
-    category: "Marketing",
-    teacher: { name: "Emily Davis", avatar: "" },
-    credits: 20,
-    rating: 4.7,
-    reviewCount: 64,
-  },
-  {
-    id: "4",
-    title: "Piano for Beginners",
-    description: "Start your musical journey with piano. Learn to read sheet music, basic chords, and play simple songs.",
-    category: "Music",
-    teacher: { name: "David Lee", avatar: "" },
-    credits: 35,
-    rating: 4.9,
-    reviewCount: 156,
-  },
-  {
-    id: "5",
-    title: "Spanish Conversation",
-    description: "Practice conversational Spanish with a native speaker. Improve pronunciation, vocabulary, and fluency.",
-    category: "Language",
-    teacher: { name: "Maria Garcia", avatar: "" },
-    credits: 15,
-    rating: 4.6,
-    reviewCount: 42,
-  },
-  {
-    id: "6",
-    title: "Startup Business Planning",
-    description: "Learn how to create a solid business plan, understand market research, and prepare for investor pitches.",
-    category: "Business",
-    teacher: { name: "James Wilson", avatar: "" },
-    credits: 40,
-    rating: 4.8,
-    reviewCount: 78,
-  },
-];
 
 const Learn = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [selectedSkill, setSelectedSkill] = useState<any | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setSkills(dummySkills);
-      setIsLoading(false);
-    }, 1500);
+  const { data: skills = [], isLoading, error } = useQuery({
+    queryKey: ['skills', { type: 'offer', excludeUid: user?.uid }],
+    queryFn: () => fetchSkills({ type: 'offer', excludeUid: user?.uid }),
+  });
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const filteredSkills = skills.filter((skill) => {
+  const filteredSkills = skills.filter((skill: any) => {
     const matchesSearch = skill.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       skill.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || skill.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  const handleLearnSkill = (skill: Skill) => {
+  const handleLearnSkill = (skill: any) => {
     toast({
       title: "Skill request sent!",
-      description: `You've requested to learn "${skill.title}" from ${skill.teacher.name}.`,
+      description: `You've requested to learn "${skill.title}" from ${skill.teacherName}.`,
     });
     setSelectedSkill(null);
   };
@@ -142,7 +75,7 @@ const Learn = () => {
       {/* Error Banner */}
       {error && (
         <div className="mb-6">
-          <ErrorBanner message={error} onDismiss={() => setError(null)} />
+          <ErrorBanner message={error instanceof Error ? error.message : "An error occurred"} />
         </div>
       )}
 
@@ -160,10 +93,14 @@ const Learn = () => {
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSkills.map((skill) => (
+          {filteredSkills.map((skill: any) => (
             <SkillCard
-              key={skill.id}
-              skill={skill}
+              key={skill._id}
+              skill={{
+                ...skill,
+                id: skill._id, // Map _id to id for component compatibility
+                teacher: { name: skill.teacherName, avatar: skill.teacherAvatar }
+              }}
               onViewDetails={setSelectedSkill}
             />
           ))}
