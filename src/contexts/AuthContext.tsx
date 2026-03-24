@@ -17,10 +17,11 @@ interface AuthContextType {
     uid: string;
     name: string;
     email: string;
-    avatar: string;
+    avatar?: string;
     credits: number;
-    role: "user" | "admin";
+    role: string;
   } | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   loginWithGoogle: () => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
@@ -38,22 +39,24 @@ const syncUserWithMongoDBHelper = async (firebaseUser: any) => {
     const userData = {
       uid: firebaseUser.uid,
       email: firebaseUser.email,
-      name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-      avatar: firebaseUser.photoURL,
+      name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "User",
+      avatar: firebaseUser.photoURL || "",
     };
 
+    console.log("Syncing user with MongoDB:", userData.uid);
     await syncUserWithMongoDB(userData);
 
     // 2. Fetch latest user data (including credits)
     const dbUser = await fetchUserFromMongoDB(firebaseUser.uid);
+    if (!dbUser) throw new Error("User not found in database after sync");
 
     return {
       uid: firebaseUser.uid,
-      name: dbUser.name,
-      email: dbUser.email,
-      avatar: dbUser.avatar,
-      credits: dbUser.credits,
-      role: dbUser.role,
+      name: dbUser.name || userData.name,
+      email: dbUser.email || userData.email,
+      avatar: dbUser.avatar || userData.avatar,
+      credits: dbUser.credits ?? 100,
+      role: dbUser.role || "user",
     };
   } catch (err) {
     console.error("Unexpected error in MongoDB auth sync:", err);
@@ -68,11 +71,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
         const syncedUser = await syncUserWithMongoDBHelper(firebaseUser);
         if (syncedUser) {
           setUser(syncedUser);
           setIsAuthenticated(true);
+        } else {
+          // If sync failed, we might want to log them out or show an error
+          setUser(null);
+          setIsAuthenticated(false);
+          toast.error("Account synchronization failed. Please try again.");
         }
       } else {
         setUser(null);
@@ -82,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -141,8 +150,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, loginWithGoogle, register, logout }}>
-      {!loading && children}
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        user,
+        loading,
+        login,
+        loginWithGoogle,
+        register,
+        logout,
+      }}
+    >
+      {children}
     </AuthContext.Provider>
   );
 };
