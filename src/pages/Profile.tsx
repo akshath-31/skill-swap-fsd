@@ -13,8 +13,9 @@ const Profile = () => {
   const { user } = useAuth();
 
   const { data: skillsTaught = [], isLoading: isLoadingTaught } = useQuery({
-    queryKey: ['skills'],
-    queryFn: fetchSkills,
+    queryKey: ['skills', { uid: user?.uid }],
+    queryFn: () => user ? fetchSkills({ uid: user.uid }) : Promise.resolve([]),
+    enabled: !!user,
   });
 
   // Mocking skills learned for now as we don't have a matching system yet
