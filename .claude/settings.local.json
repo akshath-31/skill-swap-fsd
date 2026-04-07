@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del src\\\\tsconfig.app.json)",
+      "Bash(del src\\\\tsconfig.json)",
+      "Bash(del src\\\\tsconfig.node.json)",
+      "Bash(del vite.config.ts)",
+      "Bash(find src:*)",
+      "Bash(grep -l \"import type\" src/**/*.js src/**/*.jsx)",
+      "Bash(grep -l \"interface\\\\|:\\\\s*[A-Z][a-zA-Z]*\\\\s*[,\\)]\" src/**/*.js src/**/*.jsx)",
+      "Bash(/tmp/clean-typescript.sh:*)",
+      "Bash(chmod +x /tmp/final-cleanup.sh)",
+      "Bash(/tmp/final-cleanup.sh:*)",
+      "Bash(chmod +x /tmp/strip-generics.sh)",
+      "Bash(/tmp/strip-generics.sh:*)",
+      "Bash(chmod +x /tmp/strip-multiline-generics.sh)",
+      "Bash(/tmp/strip-multiline-generics.sh:*)",
+      "Bash(/tmp/strip-nested-generics.sh:*)",
+      "Bash(git checkout:*)",
+      "Bash(find server:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm install:*)",
+      "Bash(npx:*)",
+      "Bash(rm -rf src/* src/.*)",
+      "Bash(mv tmp-build/src/* src/)",
+      "Bash(node:*)",
+      "Bash(egrep '\"@|typescript')",
+      "Bash(npm ci:*)",
+      "Bash(npm run:*)"
+    ]
+  }
+}
