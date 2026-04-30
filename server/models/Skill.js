@@ -1,21 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
-export interface ISkill extends Document {
-  uid: string; // Firebase UID of the owner/teacher
-  title: string;
-  description: string;
-  category: string;
-  credits: number;
-  students: number;
-  rating: number;
-  reviewCount: number;
-  type: 'offer' | 'request';
-  teacherName: string;
-  teacherAvatar?: string;
-  createdAt: Date;
-}
-
-const SkillSchema: Schema = new Schema({
+const SkillSchema = new Schema({
   uid: { type: String, required: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
@@ -30,4 +15,4 @@ const SkillSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-export default mongoose.model<ISkill>('Skill', SkillSchema);
+export default mongoose.model('Skill', SkillSchema);

@@ -84,7 +84,7 @@ app.get('/api/transactions/:uid', async (req, res) => {
 // Fetch all skills (optional filter by type or uid)
 app.get('/api/skills', async (req, res) => {
   const { type, uid, excludeUid } = req.query;
-  const filter: any = {};
+  const filter = {};
   if (type) filter.type = type;
   if (uid) filter.uid = uid;
   if (excludeUid) filter.uid = { $ne: excludeUid };
