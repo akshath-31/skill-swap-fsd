@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsx index.ts",
-    "dev": "nodemon --watch . --ext ts --exec tsx index.ts",
+    "start": "node index.js",
+    "dev": "nodemon --watch . --ext js --exec node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -19,11 +19,6 @@
     "mongoose": "^9.3.2"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/node": "^25.5.0",
-    "nodemon": "^3.1.14",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.2"
+    "nodemon": "^3.1.14"
   }
 }
