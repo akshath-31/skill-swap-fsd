@@ -6,8 +6,7 @@ A modern MERN-stack application facilitating the exchange of skills between user
 
 ### Frontend
 - **React 18**: Core library for the user interface.
-- **TypeScript**: Statically typed code for reliability.
-- **Vite**: Ultra-fast build tool and development server.
+- **JavaScript (ES6+)**: Dynamic and flexible application logic.
 - **Tailwind CSS**: Utility-first CSS for premium, responsive styling.
 - **React Query**: For efficient data fetching and state synchronization.
 
@@ -23,13 +22,13 @@ skill-swap-fsd/
 ├── src/                # Frontend source files
 │   ├── components/     # Reusable UI (Skills, Credits, Shared)
 │   ├── contexts/       # Auth and Data contexts
-│   ├── lib/            # API clients (mongodb-api.ts, firebase.ts)
+│   ├── lib/            # API clients (mongodb-api.js, firebase.js)
 │   └── pages/          # Core pages (Learn, Teach, Credits)
 ├── server/             # Backend source files
 │   ├── models/         # Mongoose schemas (User, Skill, Transaction)
 │   ├── .env.example    # Template for backend environment variables
-│   └── index.ts        # Main Express server entry point
-└── package.json        # Frontend dependencies and scripts
+│   └── index.js        # Main Express server entry point
+└── package.json        # Project dependencies and scripts
 ```
 
 ## ✨ Key Features
@@ -69,7 +68,7 @@ cd skill-swap-fsd
    cd ..
    npm install
    ```
-2. Start the frontend:
+2. Start the development server:
    ```bash
    npm run dev
    ```
